@@ -1,0 +1,26 @@
+.twoway-left {
+    float: left;
+    width: 50%;
+    height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.twoway-right {
+    float: right;
+    width: 50%;
+    height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.fourway {
+    width: 50%;
+    height: 45%;
+    float: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
