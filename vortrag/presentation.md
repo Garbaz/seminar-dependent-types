@@ -20,7 +20,7 @@ section {
 }
 </style>
 
-# Type checking for a <br> Dependently Typed Lambda Calculus
+# An Implementation of Type checking for a <br> Dependently Typed Lambda Calculus
 
 <link rel="stylesheet" href="style.css">
 
@@ -227,8 +227,8 @@ typeInfer i g (Ann e r) =
 <div class="fourway">
 
 $$
-\frac{\Gamma \vdash \tau :: \ast \quad \Gamma \vdash e ::_\downarrow \tau}
-     {\Gamma \vdash (\,e :: \tau\,) ::_\uparrow \tau}
+\frac{\Gamma \vdash e ::_\uparrow \tau \rightarrow \tau' \quad \Gamma \vdash e' ::_\downarrow \tau}
+     {\Gamma \vdash e \; e' ::_\uparrow \tau'}
 $$
 
 </div>
@@ -246,8 +246,8 @@ typeInfer i g (Ann e t) =
 <div class="fourway">
 
 $$
-\frac{\Gamma \vdash \rho ::_\downarrow \ast \quad \rho \Downarrow \tau \quad \Gamma \vdash e ::_\downarrow \tau}
-     {\Gamma \vdash (\,e :: \rho\,) ::_\uparrow \tau}
+\frac{\Gamma \vdash e ::_\uparrow \forall x :: \tau . \tau' \quad \Gamma \vdash e' ::_\downarrow \tau}
+     {\Gamma \vdash e \; e' ::_\uparrow \tau \! \left [ \, x \mapsto e' \, \right ]}
 $$
 
 </div>
@@ -269,7 +269,7 @@ typeInfer i g (Ann e r) =
 - There is no silver bullet solution
 - We use a combintation of two styles of bindings (→ _locally nameless_)
   - Local: _de Bruijn indices_
-  - Global: _Name strings_
+  - Global: _String names_
 
 - E.g.: $const = \lambda \rightarrow \lambda \rightarrow 1$
 
