@@ -7,6 +7,8 @@ Vortrag:
 - Before the conclusion: Outlook (Issues & further additions)
 - Interlude: Variable Bindings 😬
 
+- EXAMPLES FOR THE DIFFERENT EXPRS/TYPING RULES?
+
 - MAYBE USE THE GRAPHIC TABLET TO ANNOTATE? TRY BEFORE AT HOME AND SET UP KEY BINDINGS FOR THE KEYS ON THE TABLET :)
 
 Ausarbeitung:
