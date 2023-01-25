@@ -131,4 +131,4 @@ lQ =
 -- | This doesn't work sadly :(
 lPair :: TermInfer
 lPair =
-  Pi iStar (iPi iStar (Lam (Inf (lIf :@: iStar :@: iBound 0 :@: iBound 2 :@: iBound 1))))
+  Pi iStar (iPi iStar (iPi (Inf lBool) (Inf (lIf :@: iStar :@: iBound 0 :@: iBound 2 :@: iBound 1))))

@@ -7,10 +7,10 @@ math: mathjax
 headingDivider: 2
 
 paginate: true
-header: Tutorial Implementation of a Dependently Typed Lambda Calculus
+header: An Implementation of Type checking for a Dependently Typed Lambda Calculus
 footer: Tobias Hoffmann
 
-title: Tutorial Implementation of a Dependently Typed Lambda Calculus
+title: An Implementation of Type checking for a Dependently Typed Lambda Calculus
 author: Tobias Hoffmann
 ---
 
@@ -22,7 +22,28 @@ section {
 
 # An Implementation of Type checking for a <br> Dependently Typed Lambda Calculus
 
-<link rel="stylesheet" href="style.css">
+<style>
+.outer {
+    /* background:blue; */
+    display:flex;
+    flex-flow: row wrap;
+    width:100%;
+    height:90%;
+}
+
+.inner {
+    /* background:green; */
+    width:50%;
+    display:flex;
+    justify-content: center;
+    align-items: center;  
+}
+
+.inner2 {
+    /* background:red; */
+    width: 70%;
+}
+</style>
 
 <style scoped>
   section {
@@ -42,49 +63,33 @@ A. Löh, C. McBride, W. Swierstra
 
 ## What even are Dependent Types?
 
-- The normal Function type $\tau \rightarrow \tau'$ is extended to $(x :: \tau) \rightarrow \tau'$
-- Also commonly written as $\forall x :: \tau . \tau'$ or $\Pi_{x :: \tau} \tau'(x)$
-- The return type _(range)_ can now depend on the argument type _(domain)_
+- The normal Function type $\, \tau \rightarrow \tau' \,$ is extended to $\, \forall x : \tau . \tau'$
+- Also $\, (x : \tau) \rightarrow \tau' \,$ or $\, \Pi_{x : \tau} \tau'(x)$
+- Return type $\tau'$ can depend _value_ of argument $\, x : \tau$
 - Like polymorphism, but for all values, not just types
 
 ```hs
--- The `cons` function for lists and vectors
+-- The `cons` function for Lists and Vectors
 
-cons_monomorphic :: Int -> List Int -> List Int
+cons_monomorphic :: Int -> [Int] -> [Int]
 
-cons_polymorphic :: (a :: *) -> List a -> List a
+cons_polymorphic :: forall {a}. a -> [a] -> [a]
 
-cons_dependent :: (n :: Nat) -> (a :: *) -> Vec a n -> Vec a (1 + n)
+cons_dependent :: forall {a :: *} {n :: Int}. Vec a n -> Vec a (n + 1)
+--    This sadly is not legal Haskell ^
 ```
 
 
-## Dependent Types in Practice
+## What even are Dependent Types _for_?
 
 - General Functional Programming
   - **Idris**
   - Stronger compile time invariants
 
 - Proof Assistant
-  - **Agda**, **Coq**
+  - **Agda**, **Coq**, **Lean**
   - Automatically check the correctness of proofs
-
-
-## Programming with Dependent Types
-
-```hs
--- Known-length vectors and the functions `append` and `head` on them
-
-data Vec : Set -> Nat -> Set where
-    nil  : {a : Set} -> Vec a 0
-    _::_ : {a : Set} -> {n : Nat} -> a -> Vec a n -> Vec a (1 + n)
-
-append : {a : Set} -> {n m : Nat} -> Vec a n -> Vec a m -> Vec a (n + m)
-append nil v' = v'
-append (x :: v) v' = x :: (append v v')
-
-head : {a : Set} -> {n : Nat} -> {1 <= n} -> Vec a n -> a
-head (x :: v) = x
-```
+  - → _Curry–Howard Correspondence_
 
 
 ## Proving things with Dependent Types
@@ -108,13 +113,37 @@ assoc x y z = ?
 ```
 
 
-## Inputs and Outputs in Typing Judgements
+## Programming with Dependent Types
 
-...
+```hs
+-- Known-length vectors and the functions `append` and `head` on them
 
-=> Differentiate between inferrable Terms and checkable Terms
+data Vec (A : Set) : Nat -> Set where
+    nil  : Vec A 0
+    _::_ : {n : Nat} -> (a : A) -> Vec A n -> Vec A (1 + n)
 
-...
+append : {A : Set} -> {n m : Nat} -> Vec A n -> Vec A m -> Vec A (n + m)
+append nil v' = v'
+append (x :: v) v' = x :: (append v v')
+
+head : {A : Set} -> {n : Nat} -> {1 ≤ n} -> Vec A n -> A
+head (x :: v) = x
+```
+
+
+## Inputs and Outputs in Type Judgements
+
+$$
+\frac{\Gamma \vdash e : \tau \rightarrow \tau' \quad \Gamma \vdash e' : \tau}
+     {\Gamma \vdash e \; e' : \tau'}
+$$
+
+- How do we translate this into code? What is _input_? What is _output_?
+- → **Type Checking** vs **Type Inferece** (vs **Program Synthesis**)
+
+- **⇒** We differentiate between:
+  - $\Gamma \vdash e :_\downarrow \tau$ ("Check that $e$ has given type $\tau$, in context $\Gamma$")
+  - $\Gamma \vdash e :_\uparrow \tau$ ("Infer for $e$ what type $\tau$ it has, in context $\Gamma$")
 
 
 ## Abstract syntax STLC
@@ -125,10 +154,10 @@ assoc x y z = ?
 $$
 \begin{flalign}
 
-e ::= & \quad e :: \tau\\
+e ::= & \quad e : \tau\\
 | & \quad x\\
 | & \quad e \; e'\\
-| & \quad \lambda x \rightarrow e\\[7px]
+| & \quad \lambda x . e\\[7px]
 
 \tau ::= & \quad \alpha\\
 | & \quad \tau \rightarrow \tau'\\[7px]
@@ -157,6 +186,7 @@ data Type
 </div>
 </div>
 
+
 ## Abstract syntax DTLC
 
 <div class="outer">
@@ -164,12 +194,12 @@ data Type
 
 $$
 \begin{flalign}
-e , \rho , \kappa ::= & \quad e :: \rho\\
+e , \rho , \kappa ::= & \quad e : \rho\\
 | & \quad \ast\\
-| & \quad \forall x :: \rho . \rho'\\
+| & \quad \forall x : \rho . \rho'\\
 | & \quad x\\
 | & \quad e \; e'\\
-| & \quad \lambda x \rightarrow e\\[7px]
+| & \quad \lambda x . e
 \end{flalign}
 $$
 
@@ -194,32 +224,152 @@ data TermCheck
 </div>
 
 
-## ((Something simple here as intro))
-
-...
-
-
-## Interlude: Bound Variables 😬
-
-- There is no silver bullet solution
-- We use a combintation of two styles of bindings (→ _locally nameless_)
-  - Local: _de Bruijn indices_
-  - Global: _String names_
-
-- E.g.: $const = \lambda \rightarrow \lambda \rightarrow 1$
-
-## Type Inference of Application ($e \; e'$)
+## Type Checking of Inferrable Term
 
 <div class="outer">
 <div class="inner">
+<div class="inner2">
 
 $$
-\frac{\Gamma \vdash e ::_\uparrow \tau \rightarrow \tau' \quad \Gamma \vdash e' ::_\downarrow \tau}
-     {\Gamma \vdash e \; e' ::_\uparrow \tau'}
+\frac{\Gamma \vdash e :_\uparrow \tau}
+     {\Gamma \vdash e :_\downarrow \tau}
 $$
 
 </div>
+</div>
 <div class="inner">
+<div class="inner2">
+
+```hs
+typeCheck i g (Inf e) t = do
+  t' <- typeInfer i g e
+  if t == t'
+    then return ()
+    else
+      failure ":("
+```
+
+</div>
+</div>
+</div>
+
+
+## Interlude: Bindings 😬
+
+$$
+\begin{align}
+& (\lambda x . \lambda y . x) (\lambda y . y)\\
+\rightsquigarrow \; & (\lambda y . \lambda y . y) \; ??? 
+\end{align}
+$$
+
+- There is no silver bullet solution
+- We use a combintation of two styles of bindings
+  - → _locally nameless_
+  - Local: _de Bruijn indices_
+  - Global: String names
+
+- E.g.: $const = \lambda \rightarrow \lambda \rightarrow 1$
+
+
+## Type Inference of Free Variables
+
+<div class="outer">
+<div class="inner">
+<div class="inner2">
+
+$$
+\frac{\Gamma(x) =  \tau}
+     {\Gamma \vdash x :_\uparrow \tau}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
+
+```hs
+typeInfer i g (Free x) =
+  case lookup x g of
+    Just t -> return t
+    Nothing -> failure ":("
+typeInfer i g (Bound j) =
+  undefined -- Never needed
+```
+
+</div>
+</div>
+</div>
+
+
+## Type Checking of Abstraction ($\, \lambda x . e \,$)
+
+<div class="outer">
+<div class="inner">
+<div class="inner2">
+
+$$
+\frac{\Gamma , x : \tau \vdash e :_\downarrow \tau'}
+     {\Gamma \vdash \lambda x . e :_\downarrow \tau \rightarrow \tau'}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
+
+
+```hs
+typeCheck i g (Lam e) (Fun t t') = 
+  typeCheck (i + 1)
+    ((Local i, HasType t) : g)
+    (substCheck 0 (Free (Local i)) e)
+    t'
+```
+
+</div>
+</div>
+<div class="inner">
+<div class="inne2">
+
+$$
+\frac{\Gamma , x : \tau \vdash e :_\downarrow \tau'}
+     {\Gamma \vdash \lambda x . e :_\downarrow \forall x : \tau . \tau'}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
+
+```hs
+typeCheck i g (Lam e) (VPi t t') =
+  typeCheck (i + 1)
+    ((Local i, t) : g)
+    (substCheck 0 (Free (Local i)) e)
+    (t' (vfree (Local i)))
+```
+
+</div>
+</div>
+</div>
+
+
+## Type Inference of Application ($\, e \; e' \,$)
+
+<div class="outer">
+<div class="inner">
+<div class="inner2">
+
+$$
+\frac{\Gamma \vdash e :_\uparrow \tau \rightarrow \tau' \quad \Gamma \vdash e' :_\downarrow \tau}
+     {\Gamma \vdash e \; e' :_\uparrow \tau'}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
 
 ```hs
 typeInfer i g (e :@: e') = do
@@ -232,15 +382,19 @@ typeInfer i g (e :@: e') = do
 ```
 
 </div>
+</div>
 <div class="inner">
+<div class="inner2">
 
 $$
-\frac{\Gamma \vdash e ::_\uparrow \forall x :: \tau . \tau' \quad \Gamma \vdash e' ::_\downarrow \tau}
-     {\Gamma \vdash e \; e' ::_\uparrow \tau \! \left [ \, x \mapsto e' \, \right ]}
+\frac{\Gamma \vdash e :_\uparrow \forall x : \tau . \tau' \quad \Gamma \vdash e' :_\downarrow \tau}
+     {\Gamma \vdash e \; e' :_\uparrow \tau \! \left [ \, x \mapsto e' \, \right ]}
 $$
 
 </div>
+</div>
 <div class="inner">
+<div class="inner2">
 
 ```hs
 typeInfer i g (e :@: e') = do
@@ -255,20 +409,24 @@ typeInfer i g (e :@: e') = do
 
 </div>
 </div>
+</div>
 
 
-## Type Inference of Annotation ($e :: \rho$)
+## Type Inference of Annotation ($\, e : \rho \,$)
 
 <div class="outer">
 <div class="inner">
+<div class="inner2">
 
 $$
-\frac{\Gamma \vdash \tau :: \ast \quad \Gamma \vdash e ::_\downarrow \tau}
-     {\Gamma \vdash (\,e :: \tau\,) ::_\uparrow \tau}
+\frac{\Gamma \vdash \tau : \ast \quad \Gamma \vdash e :_\downarrow \tau}
+     {\Gamma \vdash (\,e : \tau\,) :_\uparrow \tau}
 $$
 
 </div>
+</div>
 <div class="inner">
+<div class="inner2">
 
 
 ```hs
@@ -279,15 +437,19 @@ typeInfer i g (Ann e t) = do
 ```
 
 </div>
+</div>
 <div class="inner">
+<div class="inner2">
 
 $$
-\frac{\Gamma \vdash \rho ::_\downarrow \ast \quad \rho \Downarrow \tau \quad \Gamma \vdash e ::_\downarrow \tau}
-     {\Gamma \vdash (\,e :: \rho\,) ::_\uparrow \tau}
+\frac{\Gamma \vdash \rho :_\downarrow \ast \quad \rho \Downarrow \tau \quad \Gamma \vdash e :_\downarrow \tau}
+     {\Gamma \vdash (\,e : \rho\,) :_\uparrow \tau}
 $$
 
 </div>
+</div>
 <div class="inner">
+<div class="inner2">
 
 ```hs
 typeInfer i g (Ann e r) = do
@@ -299,26 +461,124 @@ typeInfer i g (Ann e r) = do
 
 </div>
 </div>
+</div>
 
 
-## Kind Inference of Types ($\tau \rightarrow \tau'$ and $\forall x :: \rho . \rho'$)
+## _Kinding_ of Types ($\, \tau \rightarrow \tau' \,$ and $\, \forall x : \rho . \rho' \,$)
 
-...
+<div class="outer">
+<div class="inner">
+<div class="inner2">
+
+$$
+\frac{\Gamma \vdash \tau : \ast \quad \Gamma \vdash \tau' : \ast}
+     {\Gamma \vdash \tau \rightarrow \tau' : \ast}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
 
 
-## Issues & Extensions
+```hs
+kindCheck g (Fun k k') Star = do
+  kindCheck g k Star
+  kindCheck g k' Star
+```
 
-...
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
+
+$$
+\frac{\Gamma \vdash \rho :_\downarrow \ast \quad \rho \Downarrow \tau \quad \Gamma , x : \tau \vdash \rho' :_\downarrow \ast}
+     {\Gamma \vdash \forall x : \rho . \rho' :_\uparrow \ast}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
+
+```hs
+typeInfer i g (Pi r r') =
+  do
+    typeCheck i g r VStar
+    let t = evalCheck [] r
+    typeCheck (i + 1)
+      ((Local i, t) : g)
+      (substCheck0 (Free (Local i)) r')
+      VStar
+    return VStar
+```
+
+</div>
+</div>
+</div>
+
+
+## Interlude: Bindings 😬
+
+$$
+\begin{align}
+& (\lambda x . \lambda y . x) (\lambda y . y)\\
+\rightsquigarrow \; & (\lambda y . \lambda y . y) \; ??? 
+\end{align}
+$$
+
+- There is no silver bullet solution
+- We use a combintation of two styles of bindings
+  - → _locally nameless_
+  - Local: _de Bruijn indices_
+  - Global: String names
+
+- E.g.: $const = \lambda \rightarrow \lambda \rightarrow 1$
+
+
+## Type Inference of Free Variables
+
+<div class="outer" style="height: 25%;">
+<div class="inner">
+<div class="inner2">
+
+$$
+\frac{}
+     {\Gamma \vdash \ast :_\uparrow \ast}
+$$
+
+</div>
+</div>
+<div class="inner">
+<div class="inner2">
+
+```hs
+typeInfer i g Star =
+  return VStar
+```
+
+</div>
+</div>
+</div>
+
+- This is _unsound_ (→ _Girard's paradox_)
+- **⇒** Idea: Introduce _Universe Levels_
+  - $\ast : \ast_1$
+  - $\ast_1 : \ast_2$
+  - ...
 
 
 ## Conclusion
 
-- Dependent types aren't as scary as they seem
-- ...
+- Dependent types aren't scary
+- Implementing type inference & type checking isn't scary
+- 
 
 
 ## Sources & co
 
 **Slides at:** https://github.com/Garbaz/seminar-dependent-types
 
-**[1]** Löh, Andres, Conor McBride, and Wouter Swierstra. _"A tutorial implementation of a dependently typed lambda calculus."_ Fundamenta informaticae 102.2 (2010): 177-207.
+**[1]** Löh, Andres, Conor McBride, Wouter Swierstra. _"A tutorial implementation of a dependently typed lambda calculus."_ Fundamenta informaticae 102.2 (2010): 177-207.
+**[2]** Jana Dunfield, Neel Krishnaswami. _"Bidirectional typing"_ ACM Computing Surveys (CSUR) 54.5 (2021): 1-38.

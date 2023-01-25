@@ -11,6 +11,9 @@ Vortrag:
 
 - MAYBE USE THE GRAPHIC TABLET TO ANNOTATE? TRY BEFORE AT HOME AND SET UP KEY BINDINGS FOR THE KEYS ON THE TABLET :)
 
+- Insert superscripts for sources
+
+
 Ausarbeitung:
 - Extend the implementation with recursion and sum types
-- 
+- And sound `*` hierarchy (Universes)
