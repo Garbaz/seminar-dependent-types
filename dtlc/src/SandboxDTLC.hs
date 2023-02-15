@@ -1,15 +1,4 @@
-module Sandbox where
-
--- import STLC
-
--- exContext :: Context
--- exContext = [(Global "T", HasKind Star), (Global "t", HasType (TFree (Global "T")))]
-
--- exId :: TermInfer
--- exId = Ann (Lam (iBound 0))) (Fun (TFree (Global "T")) (TFree (Global "T")))
-
--- exAppl :: TermInfer
--- exAppl = exId :@: iFree (Global "t"))
+module SandboxDTLC where
 
 import DTLC
 
@@ -132,3 +121,9 @@ lQ =
 lPair :: TermInfer
 lPair =
   Pi iStar (iPi iStar (iPi (Inf lBool) (Inf (lIf :@: iStar :@: iBound 0 :@: iBound 2 :@: iBound 1))))
+
+evil :: TermInfer
+evil =
+  Ann
+    (Lam (Lam (Lam (Inf (Bound 1 :@: iBound 1 :@: iBound 0)))))
+    (iPi iStar (iPi (iPi (iBound 0) (iBound 1)) (iPi (iBound 1) (iBound 2))))

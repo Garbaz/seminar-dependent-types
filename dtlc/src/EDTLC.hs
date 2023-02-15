@@ -1,4 +1,4 @@
-module DTLC where
+module EDTLC where
 
 data TermInfer
   = Ann TermCheck TermCheck

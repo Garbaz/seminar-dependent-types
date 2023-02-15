@@ -7,10 +7,10 @@ math: mathjax
 headingDivider: 2
 
 paginate: true
-header: An Implementation of Type checking for a Dependently Typed Lambda Calculus
+header: An Implementation of Type Checking for a Dependently Typed Lambda Calculus
 footer: Tobias Hoffmann
 
-title: An Implementation of Type checking for a Dependently Typed Lambda Calculus
+title: An Implementation of Type Checking for a Dependently Typed Lambda Calculus
 author: Tobias Hoffmann
 ---
 
@@ -20,7 +20,7 @@ section {
 }
 </style>
 
-# An Implementation of Type checking for a <br> Dependently Typed Lambda Calculus
+# An Implementation of Type Checking for a <br> Dependently Typed Lambda Calculus
 
 <style>
 .outer {
@@ -64,7 +64,7 @@ A. Löh, C. McBride, W. Swierstra
 ## What even are Dependent Types?
 
 - The normal Function type $\, \tau \rightarrow \tau' \,$ is extended to $\, \forall x : \tau . \tau'$
-- Also $\, (x : \tau) \rightarrow \tau' \,$ or $\, \Pi_{x : \tau} \tau'(x)$
+- Also written $\, (x : \tau) \rightarrow \tau' \,$ or $\, \Pi_{x : \tau} \tau'(x)$
 - Return type $\tau'$ can depend _value_ of argument $\, x : \tau$
 - Like polymorphism, but for all values, not just types
 
@@ -73,10 +73,10 @@ A. Löh, C. McBride, W. Swierstra
 
 cons_monomorphic :: Int -> [Int] -> [Int]
 
-cons_polymorphic :: forall {a}. a -> [a] -> [a]
+cons_polymorphic :: forall a. a -> [a] -> [a]
 
-cons_dependent :: forall {a :: *} {n :: Int}. Vec a n -> Vec a (n + 1)
---    This sadly is not legal Haskell ^
+cons_dependent :: forall (a :: *) (n :: Int). a -> Vec a n -> Vec a (n + 1)
+--^ This sadly is not legal Haskell
 ```
 
 
@@ -97,18 +97,18 @@ cons_dependent :: forall {a :: *} {n :: Int}. Vec a n -> Vec a (n + 1)
 ```hs
 -- Associativity of addition on natural numbers in Agda
 
-data Nat : Set where
-  zero : Nat
-  suc  : Nat -> Nat
+data ℕ : Set where
+  zero : ℕ
+  suc  : ℕ -> ℕ
 
-_+_ : Nat -> Nat -> Nat
-zero + y = y
+data _==_ : ℕ -> ℕ -> Set where
+  refl : {x : ℕ} -> x == x
+
+_+_ : ℕ -> ℕ -> ℕ
+zero    + y = y
 (suc x) + y = suc (x + y)
 
-data _==_ (x : Nat) -> Set where
-  refl : x == x
-
-assoc : (x : Nat) -> (y : Nat) -> (z : Nat) -> (x + y) + z == x + (y + z)
+assoc : (x : ℕ) -> (y : ℕ) -> (z : ℕ) -> ((x + y) + z) == (x + (y + z))
 assoc x y z = ?
 ```
 
@@ -118,20 +118,20 @@ assoc x y z = ?
 ```hs
 -- Known-length vectors and the functions `append` and `head` on them
 
-data Vec (A : Set) : Nat -> Set where
-    nil  : Vec A 0
-    _::_ : {n : Nat} -> (a : A) -> Vec A n -> Vec A (1 + n)
+data Vec : Set -> ℕ -> Set where
+    nil  : {A : Set} -> Vec A zero
+    _::_ : {A : Set} -> {n : ℕ} -> (a : A) -> Vec A n -> Vec A (suc n)
 
-append : {A : Set} -> {n m : Nat} -> Vec A n -> Vec A m -> Vec A (n + m)
-append nil v' = v'
+append : {A : Set} -> {m : ℕ} -> {n : ℕ} -> Vec A m -> Vec A n -> Vec A (m + n)
+append nil      v' = v'
 append (x :: v) v' = x :: (append v v')
 
-head : {A : Set} -> {n : Nat} -> {1 ≤ n} -> Vec A n -> A
+head : {A : Set} -> {n : ℕ} -> Vec A (suc n) -> A
 head (x :: v) = x
 ```
 
 
-## Inputs and Outputs in Type Judgements
+## Inputs and Outputs in Type Rules
 
 $$
 \frac{\Gamma \vdash e : \tau \rightarrow \tau' \quad \Gamma \vdash e' : \tau}
@@ -139,12 +139,49 @@ $$
 $$
 
 - How do we translate this into code? What is _input_? What is _output_?
-- → **Type Checking** vs **Type Inferece** (vs **Program Synthesis**)
+- → **Type Checking** vs **Type Inference** (vs **Program Synthesis**)
 
 - **⇒** We differentiate between:
   - $\Gamma \vdash e :_\downarrow \tau$ ("Check that $e$ has given type $\tau$, in context $\Gamma$")
   - $\Gamma \vdash e :_\uparrow \tau$ ("Infer for $e$ what type $\tau$ it has, in context $\Gamma$")
 
+
+## Bindings...
+
+$$
+\begin{flalign}
+& (\lambda x . \lambda y . x) (\lambda y . y)\\
+\rightsquigarrow \; & \lambda y . \lambda y . y \qquad \qquad \quad (.\_ \, .?)
+\end{flalign}
+$$
+
+- There is no silver bullet solution
+- We allow for two styles of bindings (→ _locally nameless_)
+  - Local: _de Bruijn indices_
+  - Global: String names
+
+- For example:
+  - $id = \lambda x . x = \lambda \, 0$
+  - $const = \lambda x . \lambda y . x = \lambda \, \lambda \, 1$
+
+
+## The Implementation
+
+For both STLC and DTLC:
+
+```hs
+data TermInfer
+
+data TermCheck
+
+-- [...]
+
+typeInfer :: Int -> Context -> TermInfer -> Result Type
+
+typeCheck :: Int -> Context -> TermCheck -> Type -> Result ()
+
+-- [...]
+```
 
 ## Abstract syntax STLC
 
@@ -194,12 +231,12 @@ data Type
 
 $$
 \begin{flalign}
-e , \rho , \kappa ::= & \quad e : \rho\\
-| & \quad \ast\\
-| & \quad \forall x : \rho . \rho'\\
+e , \rho ::= & \quad e : \rho\\
 | & \quad x\\
 | & \quad e \; e'\\
-| & \quad \lambda x . e
+| & \quad \lambda x . e\\
+| & \quad \ast\\
+| & \quad \forall x : \rho . \rho'
 \end{flalign}
 $$
 
@@ -209,11 +246,11 @@ $$
 ```hs
 data TermInfer
   = Ann TermCheck TermCheck
-  | Star
-  | Pi TermCheck TermCheck
   | Bound Int
   | Free Name
   | TermInfer :@: TermCheck
+  | Star
+  | Pi TermCheck TermCheck
 
 data TermCheck
   = Inf TermInfer
@@ -245,31 +282,12 @@ typeCheck i g (Inf e) t = do
   t' <- typeInfer i g e
   if t == t'
     then return ()
-    else
-      failure ":("
+    else failure ":("
 ```
 
 </div>
 </div>
 </div>
-
-
-## Interlude: Bindings 😬
-
-$$
-\begin{align}
-& (\lambda x . \lambda y . x) (\lambda y . y)\\
-\rightsquigarrow \; & (\lambda y . \lambda y . y) \; ??? 
-\end{align}
-$$
-
-- There is no silver bullet solution
-- We use a combintation of two styles of bindings
-  - → _locally nameless_
-  - Local: _de Bruijn indices_
-  - Global: String names
-
-- E.g.: $const = \lambda \rightarrow \lambda \rightarrow 1$
 
 
 ## Type Inference of Free Variables
@@ -293,8 +311,6 @@ typeInfer i g (Free x) =
   case lookup x g of
     Just t -> return t
     Nothing -> failure ":("
-typeInfer i g (Bound j) =
-  undefined -- Never needed
 ```
 
 </div>
@@ -388,7 +404,7 @@ typeInfer i g (e :@: e') = do
 
 $$
 \frac{\Gamma \vdash e :_\uparrow \forall x : \tau . \tau' \quad \Gamma \vdash e' :_\downarrow \tau}
-     {\Gamma \vdash e \; e' :_\uparrow \tau \! \left [ \, x \mapsto e' \, \right ]}
+     {\Gamma \vdash e \; e' :_\uparrow \tau' \! \left [ \, x \mapsto e' \, \right ]}
 $$
 
 </div>
@@ -503,15 +519,15 @@ $$
 <div class="inner2">
 
 ```hs
-typeInfer i g (Pi r r') =
-  do
-    typeCheck i g r VStar
-    let t = evalCheck [] r
-    typeCheck (i + 1)
-      ((Local i, t) : g)
-      (substCheck0 (Free (Local i)) r')
-      VStar
-    return VStar
+typeInfer i g (Pi r r') = do
+  typeCheck i g r VStar
+  let t = evalCheck [] r
+  typeCheck (i + 1)
+    ((Local i, t) : g)
+    (substCheck 0
+      (Free (Local i)) r')
+    VStar
+  return VStar
 ```
 
 </div>
@@ -519,25 +535,7 @@ typeInfer i g (Pi r r') =
 </div>
 
 
-## Interlude: Bindings 😬
-
-$$
-\begin{align}
-& (\lambda x . \lambda y . x) (\lambda y . y)\\
-\rightsquigarrow \; & (\lambda y . \lambda y . y) \; ??? 
-\end{align}
-$$
-
-- There is no silver bullet solution
-- We use a combintation of two styles of bindings
-  - → _locally nameless_
-  - Local: _de Bruijn indices_
-  - Global: String names
-
-- E.g.: $const = \lambda \rightarrow \lambda \rightarrow 1$
-
-
-## Type Inference of Free Variables
+## The Type of the Type of Types
 
 <div class="outer" style="height: 25%;">
 <div class="inner">
@@ -562,18 +560,22 @@ typeInfer i g Star =
 </div>
 </div>
 
-- This is _unsound_ (→ _Girard's paradox_)
-- **⇒** Idea: Introduce _Universe Levels_
+- This is _inconsistent_ (→ _Girard's paradox_)
+- **⇒** Idea: Introduce a hierarchy of _sorts_
   - $\ast : \ast_1$
   - $\ast_1 : \ast_2$
+  - $\ast_2 : \ast_3$
   - ...
 
 
 ## Conclusion
 
-- Dependent types aren't scary
-- Implementing type inference & type checking isn't scary
-- 
+- Implementing type inference & checking isn't scary
+- Dependent types aren't either
+- But both have their interesting details
+- For a practical language we need:
+  - A few more features (⚠Beware of Inconsistency⚠)
+  - Lots of sugar 
 
 
 ## Sources & co

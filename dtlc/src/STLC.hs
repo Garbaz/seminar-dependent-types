@@ -136,7 +136,12 @@ typeCheck i g (Inf e) t =
               ++ show t
               ++ "`."
           )
-typeCheck i g (Lam e) (Fun t t') = typeCheck (i + 1) ((Local i, HasType t) : g) (substCheck 0 (Free (Local i)) e) t'
+typeCheck i g (Lam e) (Fun t t') =
+  typeCheck
+    (i + 1)
+    ((Local i, HasType t) : g)
+    (substCheck 0 (Free (Local i)) e)
+    t'
 typeCheck i g e t = failure ("Checking type of `" ++ show e ++ "`, but it's not the type `" ++ show t ++ "`.")
 
 substInfer :: Int -> TermInfer -> TermInfer -> TermInfer
