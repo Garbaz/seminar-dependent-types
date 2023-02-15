@@ -6,4 +6,4 @@ The elaboration is at [elaboration/elaboration.pdf](https://raw.githubuserconten
 
 The implementation of the type checking is at [dtlc](/dtlc)
 
-The Agda Source for Hurkens' Paradox is at [elaboration/paradox/paradox.agda](https://github.com/Garbaz/seminar-dependent-types/blob/master/elaboration/paradox/paradox.agda)
+The Agda Source for Hurkens' Paradox is at [elaboration/hurkens.agda](https://github.com/Garbaz/seminar-dependent-types/blob/master/elaboration/hurkens.agda)
