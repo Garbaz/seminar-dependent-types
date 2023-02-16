@@ -1,7 +1,7 @@
 {-# OPTIONS --type-in-type #-}
 
 -- An implementation of one of Hurkens' simplifications of Girard's Paradox.
--- From the paper "A Simplification of Girard's Paradox", Hurkens 1995.
+-- Adapted from "A Simplification of Girard's Paradox", Hurkens 1995.
 -- "✨" marks definitions which are pulled out of thin air.
 -- "_term_" marks terms which are defined there and then.
 
