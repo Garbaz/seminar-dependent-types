@@ -8,7 +8,7 @@
 ¬ : Set → Set
 ¬ P = P → ⊥
 
--- The set of all propositions over A, OR All subsets of A.
+-- The set of all predicates over A; Analagous to the set of all subsets of A.
 ℘ : Set → Set
 ℘ A = A → Set
 
@@ -40,7 +40,7 @@ well-founded u = (pU : ℘ U) → inductive' pU → pU u
 well-founded-Ω : well-founded Ω
 well-founded-Ω pU ind-pU = ind-pU Ω (λ u → ind-pU (τ (σ u)))
 
--- A v is a _predecessor_ of u iff for every pU in (σ u), v is in pU.
+-- A v is a _predecessor_ of a u iff for every pU in (σ u), v is in pU.
 _<_ : U → U → Set
 v < u = (pU : ℘ U) → σ u pU → pU v
 
@@ -50,7 +50,7 @@ v < u = (pU : ℘ U) → σ u pU → pU v
 
 -- We prove that Δ is inductive.
 ind-Δ : inductive' Δ
-ind-Δ u σupu τσu<u = τσu<u Δ σupu (λ pU → τσu<u λ w → pU (τ (σ w)))
+ind-Δ u σuΔ τσu<u = τσu<u Δ σuΔ (λ pU → τσu<u λ w → pU (τ (σ w)))
 
 -- We prove that Ω is not well-founded.
 ¬well-founded-Ω : ¬ (well-founded Ω)
