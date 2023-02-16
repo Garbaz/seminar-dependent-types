@@ -1,5 +1,9 @@
 {-# OPTIONS --type-in-type #-}
 
+-- An implementation of one of Hurkens' simplifications of Girard's Paradox.
+-- From the paper "A Simplification of Girard's Paradox", Hurkens 1995.
+-- "✨" marks definitions which are pulled out of thin air.
+
 -- The empty type.
 ⊥ : Set
 ⊥ = {A : Set} → A
