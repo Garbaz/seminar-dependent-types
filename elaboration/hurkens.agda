@@ -7,7 +7,7 @@
 
 -- | The empty type.
 ⊥ : Set
-⊥ = {A : Set} → A
+⊥ = (A : Set) → A
 
 -- | Negation of a predicate.
 ¬ : Set → Set
@@ -54,12 +54,12 @@ v < u = (pU : ℘ U) → σ u pU → pU v
 Δ u = ¬ (τ (σ u) < u)
 
 -- | We prove that Δ is inductive.
-ind-Δ : inductive' Δ
-ind-Δ u σuΔ τσu<u = τσu<u Δ σuΔ (λ pU → τσu<u λ w → pU (τ (σ w)))
+inductive-Δ : inductive' Δ
+inductive-Δ u σuΔ τσu<u = τσu<u Δ σuΔ (λ pU → τσu<u λ w → pU (τ (σ w)))
 
 -- | We prove that Ω is not well-founded.
 ¬well-founded-Ω : ¬ (well-founded Ω)
-¬well-founded-Ω wfΩ = wfΩ Δ ind-Δ (λ pU → wfΩ (λ v → pU (τ (σ v))))
+¬well-founded-Ω wfΩ = wfΩ Δ inductive-Δ (λ pU → wfΩ (λ v → pU (τ (σ v))))
 
 -- | 😨 And from this contradiction, we get a term of type ⊥.
 false : ⊥

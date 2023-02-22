@@ -24,6 +24,8 @@ iBound = Inf . Bound
 
 iFree = Inf . Free
 
+(.@.) ti tc = Inf (ti :@: tc)
+
 data Name
   = Global String
   | Local Int
