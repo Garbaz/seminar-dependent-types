@@ -55,7 +55,7 @@ library
     SandboxDTLC,
     SandboxSTLC,
     Hurkens,
-    FalseStandalone
+    StandaloneFalse
     
 
   -- Modules included in this library but not exported.
