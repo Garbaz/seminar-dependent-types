@@ -59,7 +59,7 @@ inductive-Δ u σuΔ τσu<u = τσu<u Δ σuΔ (λ pU → τσu<u λ w → pU (
 
 -- | We prove that Ω is not well-founded.
 ¬well-founded-Ω : ¬ (well-founded Ω)
-¬well-founded-Ω wfΩ = wfΩ Δ inductive-Δ (λ pU → wfΩ (λ v → pU (τ (σ v))))
+¬well-founded-Ω wfΩ = wfΩ Δ inductive-Δ (λ pU → wfΩ (λ w → pU (τ (σ w))))
 
 -- | 😨 And from this contradiction, we get a term of type ⊥.
 false : ⊥
