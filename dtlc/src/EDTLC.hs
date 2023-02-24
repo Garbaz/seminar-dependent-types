@@ -1,9 +1,9 @@
 module EDTLC where
 
 data TermInfer
-  = Ann TermCheck TermCheck
-  | Star
-  | Pi TermCheck TermCheck
+  = Ann TermCheck TermInfer
+  | Star Int
+  | Pi TermInfer TermInfer
   | Bound Int
   | Free Name
   | TermInfer :@: TermCheck
@@ -16,7 +16,11 @@ data TermCheck
 
 iAnn t t' = Inf (Ann t t')
 
-iStar = Inf Star
+iStar l = Inf (Star l)
+
+star0 = Star 0
+
+iStar0 = iStar 0
 
 iPi t t' = Inf (Pi t t')
 
@@ -32,7 +36,7 @@ data Name
 
 data Value
   = VLam (Value -> Value)
-  | VStar
+  | VStar Int
   | VPi Value (Value -> Value)
   | VNeutral Neutral
 
@@ -59,25 +63,31 @@ evalInfer d (Ann e _) = evalCheck d e
 evalInfer d (Bound i) = d !! i
 evalInfer d (Free x) = vfree x
 evalInfer d (e :@: e') = vapp (evalInfer d e) (evalCheck d e')
-evalInfer d Star = VStar
-evalInfer d (Pi t t') = VPi (evalCheck d t) (\x -> evalCheck (x : d) t')
+evalInfer d (Star l) = VStar l
+evalInfer d (Pi t t') = VPi (evalInfer d t) (\x -> evalInfer (x : d) t')
 
 evalCheck :: Env -> TermCheck -> Value
 evalCheck d (Inf i) = evalInfer d i
 evalCheck d (Lam e) = VLam (\x -> evalCheck (x : d) e)
 
 quote0 :: Value -> TermCheck
-quote0 = quote 0
+quote0 = quoteCheck 0
 
-quote :: Int -> Value -> TermCheck
-quote i (VLam f) = Lam (quote (i + 1) (f (vfree (Quote i))))
-quote i (VNeutral n) = Inf (neutralQuote i n)
-quote i VStar = Inf Star
-quote i (VPi v f) = Inf (Pi (quote i v) (quote (i + 1) (f (vfree (Quote i)))))
+quoteCheck :: Int -> Value -> TermCheck
+quoteCheck i (VLam f) = Lam (quoteCheck (i + 1) (f (vfree (Quote i))))
+quoteCheck i (VNeutral n) = Inf (neutralQuote i n)
+quoteCheck i (VStar l) = Inf (Star l)
+quoteCheck i (VPi v f) = Inf (Pi (quoteInfer i v) (quoteInfer (i + 1) (f (vfree (Quote i)))))
+
+quoteInfer :: Int -> Value -> TermInfer
+quoteInfer i (VLam f) = error "We can not quote a lambda value to a TermInfer. Something is terribly wrong!"
+quoteInfer i (VNeutral n) = neutralQuote i n
+quoteInfer i (VStar l) = Star l
+quoteInfer i (VPi v f) = Pi (quoteInfer i v) (quoteInfer (i + 1) (f (vfree (Quote i))))
 
 neutralQuote :: Int -> Neutral -> TermInfer
 neutralQuote i (NFree x) = boundfree i x
-neutralQuote i (NApp n v) = neutralQuote i n :@: quote i v
+neutralQuote i (NApp n v) = neutralQuote i n :@: quoteCheck i v
 
 boundfree :: Int -> Name -> TermInfer
 boundfree i (Quote k) = Bound (i - k - 1)
@@ -96,10 +106,13 @@ typeInfer0 = typeInfer 0
 typeInfer :: Int -> Context -> TermInfer -> Result Value
 typeInfer i g (Ann e r) =
   do
-    typeCheck i g r VStar
-    let t = evalCheck [] r
-    typeCheck i g e t
-    return t
+    s <- typeInfer i g r
+    case s of
+      (VStar l) -> do
+        let t = evalInfer [] r
+        typeCheck i g e t
+        return t
+      _ -> failure ("The type of `" ++ show r ++ "` should be `VStar _`, but it is `" ++ show s ++ "`.")
 typeInfer i g (Bound j) = failure ("Trying to infer type of bound variable `" ++ show j ++ "`, but we don't do that.")
 typeInfer i g (Free x) =
   case lookup x g of
@@ -121,17 +134,22 @@ typeInfer i g (e :@: e') =
               ++ show e'
               ++ "`, but the former isn't a function."
           )
-typeInfer i g Star = return VStar
+typeInfer i g (Star l) = return (VStar (l + 1))
 typeInfer i g (Pi r r') =
   do
-    typeCheck i g r VStar
-    let t = evalCheck [] r
-    typeCheck
-      (i + 1)
-      ((Local i, t) : g)
-      (substCheck 0 (Free (Local i)) r')
-      VStar
-    return VStar
+    s <- typeInfer i g r
+    case s of
+      (VStar l) -> do
+        let t = evalInfer [] r
+        s' <-
+          typeInfer
+            (i + 1)
+            ((Local i, t) : g)
+            (substInfer 0 (Free (Local i)) r')
+        case s' of
+          (VStar l') -> return (VStar (max l l'))
+          _ -> failure ("The type of `" ++ show r' ++ "` should be `VStar _`, but it is `" ++ show s' ++ "`.")
+      _ -> failure ("The type of `" ++ show r ++ "` should be `VStar _`, but it is `" ++ show s ++ "`.")
 
 typeCheck :: Int -> Context -> TermCheck -> Value -> Result ()
 typeCheck i g (Inf e) t =
@@ -164,8 +182,8 @@ substInfer i r (Ann e t) = Ann (substCheck i r e) t
 substInfer i r (Bound j) = if i == j then r else Bound j
 substInfer i r (Free x) = Free x
 substInfer i r (e :@: e') = substInfer i r e :@: substCheck i r e'
-substInfer i r Star = Star
-substInfer i r (Pi t t') = Pi (substCheck i r t) (substCheck (i + 1) r t')
+substInfer i r (Star l) = Star l
+substInfer i r (Pi t t') = Pi (substInfer i r t) (substInfer (i + 1) r t')
 
 substCheck :: Int -> TermInfer -> TermCheck -> TermCheck
 substCheck i r (Inf e) = Inf (substInfer i r e)

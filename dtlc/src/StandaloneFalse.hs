@@ -1,4 +1,4 @@
-module FalseStandalone where
+module StandaloneFalse where
 
 import DTLC
 

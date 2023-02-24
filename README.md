@@ -6,8 +6,10 @@ The elaboration is at [elaboration/elaboration.pdf](https://raw.githubuserconten
 
 The Agda Source for Hurkens' Paradox is at [elaboration/hurkens.agda](https://github.com/Garbaz/seminar-dependent-types/blob/master/elaboration/hurkens.agda)
 
-The implementation of the type system is at [dtlc](/dtlc)
+The implementation of the simply typed lambda calculus is at [dtlc/src/STLC.hs](/dtlc/src/STLC.hs)
 
-The implementation of Hurkens' Paradox in this type system is at [dtlc/src/Hurkens.hs](/dtlc/src/Hurkens.hs)
+The implementation of the inconsistent dependently typed lambda calculus is at [dtlc/src/DTLC.hs](/dtlc/src/DTLC.hs)
 
-The standalone `false` term in this type system is at [dtlc/src/StandaloneFalse.sh](/dtlc/src/StandaloneFalse.hs)
+The implementation of the consistent dependently typed lambda calculus is at [dtlc/src/EDTLC.hs](/dtlc/src/EDTLC.hs)
+
+The implementation of Hurkens' Paradox in the inconsistent dependently typed lambda calculus is at [dtlc/src/Hurkens.hs](/dtlc/src/Hurkens.hs)
