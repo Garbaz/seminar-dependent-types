@@ -74,7 +74,7 @@ $$
 
 We will not concern ourselves with translating this property into type theory or proving that this property holds for our $(U, \sigma, \tau)$ (see Hurkens' original derivation [Hurkens 1995] for some elaboration on the definition of a powerful universe), since such a proof term will not be necessary in constructing our paradox. Rather we will implicitly use this property as it arises from the behaviour of $\tau$ and $\sigma$ as defined above.
 
-### _Inductive_ Subsets and _Well Founded_ Elements
+### Inductive Subsets and Well Founded Elements
 
 For subsets of $U$ we define the following proposition:
 
@@ -98,7 +98,7 @@ well-founded u = (pU : ℘ U) → inductive' pU → pU u
 
 In set theoretic terms this means that we consider some element $u$ of $U$ to be _well founded_ iff it is in every inductive subset of $U$.
 
-### A Paradoxical Element 
+### A Paradoxical Element
 
 With $\tau$ from our definition of $U$ as a powerful universe, we pick out a specific element in $U$ for which we can show that it simultaneously is well founded, and isn't well founded, which will give us the contradiction we seek:
 
